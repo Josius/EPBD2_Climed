@@ -4,11 +4,10 @@ import java.sql.*;
 import java.util.*;
 
 import beans.Especialidade;
-import beans.Paciente;
 import conexao.ConexaoBD;
 
 public class EspecialidadeDao {
-    private Connection conexaoBD;
+    private final Connection conexaoBD;
     private String query;
 
     public EspecialidadeDao() {
