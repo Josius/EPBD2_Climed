@@ -1,12 +1,13 @@
 package beans;
 
+import java.sql.Time;
 import java.util.*;
 
 public class Consulta {
-    private Long idcon;
+    private Long id;
     private String diacon;
-    private Date horainiccon;
-    private Date horafimcon;
+    private Time horainiccon;
+    private Time horafimcon;
     private boolean pagou;
     private int valorpago;
     private String formapagamento;
@@ -14,15 +15,16 @@ public class Consulta {
     private Long idesp;
     private Long idpac;
 
+
     public Consulta() {
     }
 
-    public Long getIdcon() {
-        return idcon;
+    public Long getIdn() {
+        return id;
     }
 
-    public void setIdcon(Long idcon) {
-        this.idcon = idcon;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getDiacon() {
@@ -33,19 +35,19 @@ public class Consulta {
         this.diacon = diacon;
     }
 
-    public Date getHorainiccon() {
+    public Time getHorainiccon() {
         return horainiccon;
     }
 
-    public void setHorainiccon(Date horainiccon) {
+    public void setHorainiccon(Time horainiccon) {
         this.horainiccon = horainiccon;
     }
 
-    public Date getHorafimcon() {
+    public Time getHorafimcon() {
         return horafimcon;
     }
 
-    public void setHorafimcon(Date horafimcon) {
+    public void setHorafimcon(Time horafimcon) {
         this.horafimcon = horafimcon;
     }
 
@@ -100,12 +102,12 @@ public class Consulta {
     @Override
     public String toString() {
         return "Consulta{" +
-                "idcon=" + idcon +
+                "\nidcon=" + id +
                 ", diacon='" + diacon + '\'' +
                 ", horainiccon=" + horainiccon +
                 ", horafimcon=" + horafimcon +
                 ", pagou=" + pagou +
-                ", valorpago=" + valorpago +
+                "\nvalorpago=" + valorpago +
                 ", formapagamento='" + formapagamento + '\'' +
                 ", crm=" + crm +
                 ", idesp=" + idesp +

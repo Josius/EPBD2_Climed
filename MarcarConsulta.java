@@ -1,17 +1,13 @@
-import beans.Consulta;
-import beans.Especialidade;
-import beans.Medico;
-import beans.Paciente;
-import dao.EspecialidadeDao;
-import dao.MedicoDao;
-import dao.PacienteDAO;
+import beans.*;
+import dao.*;
 
 import java.nio.charset.StandardCharsets;
+import java.sql.Time;
 import java.util.*;
 
 import java.util.Scanner;
 
-public class Execucao {
+public class MarcarConsulta {
 
     public static void main(String[] args) {
         Scanner entrada = new Scanner(System.in, StandardCharsets.UTF_8);
@@ -20,7 +16,7 @@ public class Execucao {
 
         System.out.println("\nIniciando cadastro da consulta");
 
-/*        switch (menuPaciente(lista, entrada)) {
+        switch (menuPaciente(lista, entrada)) {
             case "1":
                 System.out.println("Digite o CPF:");
                 consulta.setIdpac(buscarPaciente(entrada.nextLong(), lista));
@@ -39,7 +35,7 @@ public class Execucao {
             default:
                 System.exit(0);
                 break;
-        }*/
+        }
 
         switch (menuEspecialidade(lista, entrada)) {
             case "1":
@@ -59,13 +55,11 @@ public class Execucao {
 
         switch (menuMedico(lista, entrada)) {
             case "1":
-//                sabe o nome do médico
-                System.out.println("Digite o Nome do médico");
+                System.out.println("Digite o nome COMPLETO do médico");
                 consulta.setCrm(buscarCrmMedicoPorNomeEComEspecialidade(entrada.next(), consulta.getIdesp(), lista));
                 lista.setLength(0);
                 break;
             case "2":
-//                não sabe o nome do médico
                 System.out.println("Escolher médico da lista.");
                 consulta.setCrm(buscarCrmMedicoPorNomeEComEspecialidade("", consulta.getIdesp(), lista));
                 //consulta.setIdesp(buscarEspecialidade("Clínico Geral", lista));
@@ -76,7 +70,10 @@ public class Execucao {
                 break;
         }
 
-        System.out.println("\n"+consulta);
+        lista.setLength(0);
+        menuAgenda(lista, consulta.getCrm());
+        System.out.println(agendarConsulta(consulta, entrada, lista));
+        entrada.close();
     }
 
     private static String menuPaciente(StringBuffer lista, Scanner entrada) {
@@ -115,6 +112,20 @@ public class Execucao {
         return entrada.next();
     }
 
+    private static void menuAgenda(StringBuffer lista, Long CRM) {
+        AgendaDao agendaDao = new AgendaDao();
+        List<Agenda> list = agendaDao.getAgenda(CRM.longValue());
+        for (Agenda agenda : list) {
+            lista.append("\n\tAGENDA DO MÉDICO SELECIONADO")
+                    .append("\n\tDia da semana: " + agenda.getDiasemana())
+                    .append("\n\tInício: " + agenda.getHorainicio(), 0, 15)
+                    .append("\n\tFim: " + agenda.getHorafim(), 0, 12)
+                    .append("\n\tCRM: " + agenda.getCrm()).append("\n\t-------------------");
+        }
+        System.out.println(lista);
+        lista.setLength(0);
+    }
+
     private static long buscarPaciente(long CPF, StringBuffer lista){
         PacienteDAO pacienteDAO = new PacienteDAO();
         List<Paciente> pacienteList = pacienteDAO.getPaciente(CPF);
@@ -146,14 +157,17 @@ public class Execucao {
     }
 
     private static Long buscarEspecialidade(String next, StringBuffer lista) {
+        Scanner scanner = new Scanner(System.in, StandardCharsets.UTF_8);
         EspecialidadeDao especialidadeDao = new EspecialidadeDao();
         List<Especialidade> especialidadeList = especialidadeDao.getEspecialidade(next);
         for (Especialidade especialidade : especialidadeList) {
-            lista.append("\n\tNúmero Identificador: " + especialidade.getId())
-                    .append("\n\tEspecialidade: " + especialidade.getNomee())
-                    .append("\n\t-------------------");
+            lista.append("\n\tNúmero Identificador: " + especialidade.getId()).append("\n\tEspecialidade: " + especialidade.getNomee()).append("\n\t-------------------");
         }
         System.out.println(lista.toString());
+        if (especialidadeList.size() > 1) {
+            System.out.println("Digite corretamente o Número Identificador da especialidade desejada:");
+            return scanner.nextLong();
+        }
         return especialidadeList.get(0).getId();
     }
 
@@ -174,5 +188,69 @@ public class Execucao {
         }else {
             return medicoList.get(0).getId();
         }
+    }
+    private static Time verificaFormatoEntradaHora(String string) {
+        if (string.matches("\\d{2}:\\d{2}")) {
+            try {
+                Time time = Time.valueOf(string + ":00");
+                return time;
+            }
+            catch (IllegalArgumentException illegalArgumentException) {
+                System.out.println("Formato de hora inválido. " + illegalArgumentException.getMessage());
+            }
+        } else {
+            System.out.println("Formato de hora inválido. Por favor, use o formato HH:MM");
+        }
+        return null;
+    }
+    private static Consulta agendarConsulta(Consulta consulta, Scanner entrada, StringBuffer lista) {
+        lista.append("\n\t(1) Domingo.")
+                .append("\n\t(2) Segunda.")
+                .append("\n\t(3) Terça.")
+                .append("\n\t(4) Quarta.")
+                .append("\n\t(5) Quinta.")
+                .append("\n\t(6) Sexta.")
+                .append("\n\t(7) Sábado.")
+                .append("\nDigite número do dia da consulta: ");
+        System.out.println(lista);
+        lista.setLength(0);
+
+        consulta.setDiacon(MarcarConsulta.retornaDiaSemanaEnum(entrada.next()));
+        System.out.print("Digite hora de início da consulta (formato HH:MM): ");
+        String hora = entrada.next();
+        consulta.setHorainiccon(MarcarConsulta.verificaFormatoEntradaHora(hora));
+        System.out.print("Digite hora do fim da consulta (formato HH:MM): ");
+        hora = entrada.next();
+        consulta.setHorafimcon(MarcarConsulta.verificaFormatoEntradaHora(hora));
+        ConsultaDao consultaDao = new ConsultaDao();
+        return consultaDao.postConsulta(consulta);
+    }
+
+    private static String retornaDiaSemanaEnum(String string) {
+        switch (string) {
+            case "1": {
+                return "SEGUNDA";
+            }
+            case "2": {
+                return "TERCA";
+            }
+            case "3": {
+                return "QUARTA";
+            }
+            case "4": {
+                return "QUINTA";
+            }
+            case "5": {
+                return "SEXTA";
+            }
+            case "6": {
+                return "SABADO";
+            }
+            case "7": {
+                return "DOMINGO";
+            }
+        }
+        System.exit(0);
+        return null;
     }
 }
